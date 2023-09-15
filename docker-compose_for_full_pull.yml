@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  php-apache-environment:
+    image: iambee/php-apache-environment:latest
+    container_name: php-apache
+    depends_on:
+      - db
+   # volumes:
+   #   - ./php/src:/var/www/html/
+    ports:
+      - 8080:80
+  db:
+    image: iambee/mysql:latest
+    container_name: db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: my_secret_password
+      MYSQL_DATABASE: app_db
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: db_user_pass
+    ports:
+      - "6033:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+  phpmyadmin:
+    image: iambee/phpmyadmin:latest
+    container_name: pma
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+volumes:
+  dbdata:

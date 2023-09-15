@@ -1,0 +1,47 @@
+version: '3.8' #versionของDocker compose
+services: #ประกาศเรียกใช้services
+  php-apache-environment: #เรียกใช้services ชื่อ php-apache-environment
+    container_name: php-apache #ตั้ง container ชื่อ php-apache
+    build: 
+      context: ./php #ติดต่อไป path ที่เก็บ Dockerfile
+      dockerfile: Dockerfile #Run คำสั่งใน Dockerfile
+    depends_on: #คือ จะ Run container นี้ได้ก็ต่อเมื่อมี container ชื่อ db 
+      - db
+    volumes: #คือพื้นที่ที่ใช้ยึดติด (Mount) ระหว่างภายนอก Container กับภายใน Container
+      - ./php/src:/var/www/html/
+    ports: #กำหนด ports
+      - 8080:80
+    image: "iambee/php-apache-environment:latest" # repository ที่ต้องการ push ขึ้น Docker hub
+  db:
+    container_name: db
+    build: 
+      context: ./mysql
+      dockerfile: Dockerfile
+    restart: always #ตั้งค่าrestart ตัวเองอัตโนมัติเมื่อเกิดข้อผิดพลาด หรือสั่งให้เริ่มต้นทำงานอัตโนมัติเมื่อเปิดเครื่องขึ้นมาใหม่
+    environment: #กำหนด Environment variable แบบกำหนด Value ลงไปได้
+      MYSQL_ROOT_PASSWORD: my_secret_password
+      MYSQL_DATABASE: app_db
+      MYSQL_USER: db_user
+      MYSQL_PASSWORD: db_user_pass
+    ports:
+      - "6033:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    image: "iambee/mysql:latest"
+  phpmyadmin:
+    container_name: pma
+    build: 
+      context: ./phpmyadmin
+      dockerfile: Dockerfile
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+    image: "iambee/phpmyadmin:latest"
+volumes:
+  dbdata:
